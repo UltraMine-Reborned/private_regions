@@ -228,7 +228,7 @@ public class ChunkLoaderManager
 			ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(cx, cz));
 			heldChunks.put(key, ticket);
 			if(ticket.getChunkList().size() == ticket.getChunkListDepth() && !freeTickets.isEmpty())
-				freeTickets.get(freeTickets.size() - 1);
+				freeTickets.remove(freeTickets.size() - 1);
 		}
 
 		private Ticket createTicket(int dim)
