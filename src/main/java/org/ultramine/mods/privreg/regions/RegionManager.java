@@ -3,11 +3,11 @@ package org.ultramine.mods.privreg.regions;
 import com.mojang.authlib.GameProfile;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.openhft.koloboke.collect.map.IntObjMap;
+import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ultramine.mods.privreg.InitCommon;
@@ -35,8 +35,8 @@ public class RegionManager implements IRegionManager
 	private final MinecraftServer server;
 	private final int dimension;
 	private final IRegionDataProvider dataProvider;
-	private Region[] regions;
-	private int lastID;
+	private final IntObjMap<Region> idToRegion = HashIntObjMaps.newMutableMap();
+	private int nextRegionId;
 
 	private final RegionMap regionMap = new RegionMap();
 
@@ -58,21 +58,17 @@ public class RegionManager implements IRegionManager
 		for(Region reg : list)
 			if(reg.getID() > maxID)
 				maxID = reg.getID();
-		lastID = maxID;
-		int size = 128;
-		while(size < maxID)
-			size <<= 1;
-		regions = new Region[size];
+		nextRegionId = maxID + 1;
 		for(Region reg : list)
 		{
 			reg.setWorld(dimension);
-			regions[reg.getID()] = reg;
+			idToRegion.put(reg.getID(), reg);
 			regionMap.add(reg);
 		}
 
 		for(Region reg : list)
 			if(reg.parentWaiting != -1)
-				reg.setParent(regions[reg.parentWaiting]);
+				reg.setParent(idToRegion.get(reg.parentWaiting));
 
 		for(Region reg : list)
 		{
@@ -111,16 +107,9 @@ public class RegionManager implements IRegionManager
 		return true;
 	}
 
-	private int getUniqueRegionID()
+	private int getNextRegionID()
 	{
-		for(int i = 0; i < regions.length; i++)
-			if(regions[i] == null) return i;
-
-		int length = regions.length;
-		Region[] regionsnew = new Region[length * 2];
-		System.arraycopy(regions, 0, regionsnew, 0, length);
-		regions = regionsnew;
-		return length;
+		return nextRegionId++;
 	}
 
 	public Region createRegion(TileBlockRegion te, GameProfile player)
@@ -154,7 +143,7 @@ public class RegionManager implements IRegionManager
 		if (parent == null && hasRegionsInRange(shape.expandAll(cd)))
 			return null;
 
-		Region region = new Region(this, getUniqueRegionID(), true);
+		Region region = new Region(this, getNextRegionID(), true);
 		region.setBlock(block);
 		region.setShape(shape);
 		region.setWorld(world);
@@ -166,10 +155,8 @@ public class RegionManager implements IRegionManager
 		owner.setRight(RegionRights.CREATOR, true);
 		region.getOwnerStorage().add(owner);
 
-		regions[region.getID()] = region;
+		idToRegion.put(region.getID(), region);
 		dataProvider.createRegion(region);
-		if (region.getID() > lastID)
-			lastID = region.getID();
 
 		regionMap.add(region);
 		tracker.onRegionCreate(region);
@@ -179,7 +166,7 @@ public class RegionManager implements IRegionManager
 
 	public Region dangerousCreateRegion(Rectangle shape, BlockPos block, int dimension)
 	{
-		Region region = new Region(this, getUniqueRegionID(), true);
+		Region region = new Region(this, getNextRegionID(), true);
 
 		region.setShape(shape);
 		region.setWorld(dimension);
@@ -187,10 +174,8 @@ public class RegionManager implements IRegionManager
 
 		region.onCreate();
 
-		regions[region.getID()] = region;
+		idToRegion.put(region.getID(), region);
 		dataProvider.createRegion(region);
-		if (region.getID() > lastID)
-			lastID = region.getID();
 
 		regionMap.add(region);
 		tracker.onRegionCreate(region);
@@ -206,31 +191,23 @@ public class RegionManager implements IRegionManager
 
 	public void saveAllRegion()
 	{
-		dataProvider.saveAll(regions);
+		dataProvider.saveAll(idToRegion.values());
 	}
 
 	public void onTick(int tick)
 	{
 		if(tick % 101 == 0)
 		{
-			for(int i = 0; i <= lastID; i++)
-			{
-				Region region = regions[i];
-				if (region != null)
-					region.onUpdate();
-			}
+			for(Region region : idToRegion.values())
+				region.onUpdate();
 		}
 	}
 
 	public void unload()
 	{
 		saveAllRegion();
-		for(int i = 0; i <= lastID; i++)
-		{
-			Region region = regions[i];
-			if (region != null)
-				region.onUnload();
-		}
+		for(Region region : idToRegion.values())
+			region.onUnload();
 		dataProvider.close();
 	}
 
@@ -238,19 +215,14 @@ public class RegionManager implements IRegionManager
 	{
 		regionMap.remove(region);
 		region.onDestroy();
-		regions[region.getID()] = null;
+		idToRegion.remove(region.getID());
 		dataProvider.destroyRegion(region);
 		tracker.onRegionDestroy(region);
-		if(region.getID() == lastID)
-			lastID--;
 	}
 
 	public Region getRegion(int id)
 	{
-		if(id >= regions.length || id < 0)
-			return null;
-
-		return regions[id];
+		return idToRegion.get(id);
 	}
 
 	@Override
@@ -277,9 +249,9 @@ public class RegionManager implements IRegionManager
 		return regionMap.hasInRange(range);
 	}
 
-	public Region[] unsafeGetRegions()
+	public IntObjMap<Region> unsafeGetRegions()
 	{
-		return regions;
+		return idToRegion;
 	}
 
 	public RegionChangeResult expandRegion(Region region, ForgeDirection dir, int amount)

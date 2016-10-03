@@ -38,7 +38,7 @@ public abstract class RegionModule
 	public List<String> getDisplayDesc()
 	{
 		List<String> desc = new ArrayList<String>();
-		Collections.addAll(desc, StringUtils.split(tlt("item.privreg.module."+registryItem.getName()+".desc"), "\\n"));
+		Collections.addAll(desc, StringUtils.splitByWholeSeparator(tlt("item.privreg.module."+registryItem.getName()+".desc"), "\\n"));
 		addEnergyCostDescLine(desc);
 		return desc;
 	}

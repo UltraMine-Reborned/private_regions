@@ -39,7 +39,7 @@ public class DynmapIntegration extends DynmapCommonAPIListener
 		this.markers = api.createMarkerSet("privreg", "Private Regions", null, false);
 		this.markers.setHideByDefault(true);
 
-		for(Region region : PrivateRegions.instance().getServerRegionManager(0).unsafeGetRegions())
+		for(Region region : PrivateRegions.instance().getServerRegionManager(0).unsafeGetRegions().values())
 		{
 			if(region != null)
 				loadRegion(region);

@@ -14,7 +14,7 @@ public interface IRegionDataProvider
 
 	void createRegion(Region region);
 
-	void saveAll(Region[] regions);
+	void saveAll(Iterable<Region> regions);
 
 	void saveRegion(Region region);
 

@@ -23,7 +23,7 @@ public class DummyDataProvider implements IRegionDataProvider
 	}
 
 	@Override
-	public void saveAll(Region[] regions)
+	public void saveAll(Iterable<Region> regions)
 	{
 
 	}

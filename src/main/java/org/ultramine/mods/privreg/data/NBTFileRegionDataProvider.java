@@ -48,7 +48,7 @@ public class NBTFileRegionDataProvider implements IRegionDataProvider
 	}
 
 	@Override
-	public void saveAll(Region[] regions)
+	public void saveAll(Iterable<Region> regions)
 	{
 		for(Region region : regions)
 		{

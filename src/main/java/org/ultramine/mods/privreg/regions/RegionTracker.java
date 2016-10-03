@@ -22,7 +22,7 @@ public class RegionTracker
 	public void onPlayerEnter(EntityPlayerMP player)
 	{
 		int dim = player.dimension;
-		for(Region region : regMgr.unsafeGetRegions())
+		for(Region region : regMgr.unsafeGetRegions().values())
 			if(region != null)
 				new PacketRegionData(region).sendTo(player);
 	}
