@@ -109,7 +109,7 @@ privreg.gui.module.admin.cmd1=command blacklist:
 privreg.gui.module.admin.cmd2=whitelist:
 
 privreg.msg.entering=Entering the private region
-privreg.msg.leave=Entering the private region
+privreg.msg.leave=Leaving the private region
 privreg.msg.place=Placing blocks is prohibited in the area
 privreg.msg.break=Breaking blocks is prohibited in the area
 privreg.msg.interact=Using of blocks/items is prohibited in the area
