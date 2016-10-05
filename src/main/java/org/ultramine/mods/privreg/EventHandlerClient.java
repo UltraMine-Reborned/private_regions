@@ -31,7 +31,7 @@ public class EventHandlerClient
 		if(e.phase == TickEvent.Phase.END)
 		{
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-			if(player != null)
+			if(player != null && (player.posX != 0 || player.posY != 0 || player.posZ != 0))
 			{
 				BlockPos current = new BlockPos(player.posX, player.posY, player.posZ);
 
@@ -75,6 +75,8 @@ public class EventHandlerClient
 				}
 
 				last = current;
+			} else {
+				last = null;
 			}
 		}
 	}
