@@ -43,6 +43,9 @@ public class RegionManager implements IRegionManager
 
 	private RegionTracker tracker = new RegionTracker(this);
 
+	private boolean canRemoveRegionNow = true;
+	private final List<Region> regionsToRemove = new ArrayList<Region>();
+
 	public RegionManager(MinecraftServer server, int dimension, IRegionDataProvider dataProvider)
 	{
 		this.server = server;
@@ -199,8 +202,12 @@ public class RegionManager implements IRegionManager
 	{
 		if(tick % 101 == 0)
 		{
+			canRemoveRegionNow = false;
 			for(Region region : idToRegion.values())
 				region.onUpdate();
+			canRemoveRegionNow = true;
+			for(Region region : regionsToRemove)
+				idToRegion.remove(region.getID());
 		}
 	}
 
@@ -216,7 +223,10 @@ public class RegionManager implements IRegionManager
 	{
 		regionMap.remove(region);
 		region.onDestroy();
-		idToRegion.remove(region.getID());
+		if(canRemoveRegionNow)
+			idToRegion.remove(region.getID());
+		else
+			regionsToRemove.add(region);
 		dataProvider.destroyRegion(region);
 		tracker.onRegionDestroy(region);
 	}
