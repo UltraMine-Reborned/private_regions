@@ -109,6 +109,7 @@ privreg.gui.module.admin.displayerdrops=Disable player items drop
 privreg.gui.module.admin.cmd1=command blacklist:
 privreg.gui.module.admin.cmd2=whitelist:
 
+privreg.msg.createfail=Failed to create region: Itersects with other region!
 privreg.msg.entering=Entering the private region
 privreg.msg.leave=Leaving the private region
 privreg.msg.place=Placing blocks is prohibited in the area

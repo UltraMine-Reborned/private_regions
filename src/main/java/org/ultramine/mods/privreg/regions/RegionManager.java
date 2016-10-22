@@ -23,6 +23,7 @@ import org.ultramine.regions.IRegionManager;
 import org.ultramine.regions.Rectangle;
 import org.ultramine.regions.RegionMap;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -112,7 +113,7 @@ public class RegionManager implements IRegionManager
 		return nextRegionId++;
 	}
 
-	public Region createRegion(TileBlockRegion te, GameProfile player)
+	public @Nonnull Region createRegion(TileBlockRegion te, GameProfile player) throws RegionCreationException
 	{
 		final int cd = RegionConfig.CheckDistance;
 		BlockPos block = BlockPos.fromTileEntity(te);
@@ -141,7 +142,7 @@ public class RegionManager implements IRegionManager
 		if(parent == null)
 			shape = shape.setSide(ForgeDirection.UP, 255).setSide(ForgeDirection.DOWN, 0);
 		if (parent == null && hasRegionsInRange(shape.expandAll(cd)))
-			return null;
+			throw new RegionCreationException();
 
 		Region region = new Region(this, getNextRegionID(), true);
 		region.setBlock(block);

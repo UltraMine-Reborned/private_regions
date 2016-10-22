@@ -12,6 +12,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ultramine.gui.IGui;
@@ -25,6 +28,7 @@ import org.ultramine.mods.privreg.modules.RegionModule;
 import org.ultramine.mods.privreg.packets.PacketRegionAction;
 import org.ultramine.mods.privreg.packets.PacketTEBlockRegion;
 import org.ultramine.mods.privreg.regions.Region;
+import org.ultramine.mods.privreg.regions.RegionCreationException;
 import org.ultramine.mods.privreg.regions.RegionManager;
 import org.ultramine.mods.privreg.regions.RegionManagerClient;
 import org.ultramine.mods.privreg.regions.RegionRights;
@@ -76,14 +80,12 @@ public class TileBlockRegion extends TileEntity implements ITEPacketHandler<Pack
 			return;
 		}
 
-		region = getRegionManager().createRegion(this, ((EntityPlayerMP) entity).getGameProfile());
-		if(region == null)
-		{
-			remove = true;
-		}
-		else
-		{
+		try {
+			region = getRegionManager().createRegion(this, ((EntityPlayerMP) entity).getGameProfile());
 			new PacketRegionAction(region.getID(), PacketRegionAction.CLIENT_RENDER).sendTo((EntityPlayerMP)entity);
+		} catch(RegionCreationException e) {
+			remove = true;
+			((EntityPlayerMP) entity).addChatComponentMessage(new ChatComponentTranslation("privreg.msg.createfail").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
 		}
 	}
 
@@ -190,7 +192,7 @@ public class TileBlockRegion extends TileEntity implements ITEPacketHandler<Pack
 
 			if(remove)
 			{
-				worldObj.setBlockSilently(xCoord, yCoord, zCoord, Blocks.air, 0, 3);
+				worldObj.func_147480_a(xCoord, yCoord, zCoord, true);
 			}
 		}
 	}

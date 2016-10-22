@@ -109,6 +109,7 @@ privreg.gui.module.admin.displayerdrops=Отключить дроп предме
 privreg.gui.module.admin.cmd1=Черный список команд:
 privreg.gui.module.admin.cmd2=Белый список команд:
 
+privreg.msg.createfail=Не удалось создать регион: Пересечена другая зона!
 privreg.msg.entering=Вы вошли в приватный регион
 privreg.msg.leave=Вы покинули приватный регион
 privreg.msg.place=Установка блоков запрещена на данной территории
