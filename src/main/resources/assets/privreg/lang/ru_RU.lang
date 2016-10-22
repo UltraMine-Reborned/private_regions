@@ -3,6 +3,7 @@ itemGroup.um_privreg=Private Regions
 tile.um_privreg_pregion.name=Блок привата
 tile.um_privreg_barrier.name=Барьер привата
 tile.um_privreg_charger.name=Зарядник антиматерии
+tile.um_privreg_rentstand1.name=Стенд аренды
 #|
 item.um_privreg_biocard.name=Карта владельца привата
 item.um_privreg_antimatter.name=Контейнер антиматерии

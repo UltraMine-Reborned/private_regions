@@ -3,6 +3,7 @@ itemGroup.um_privreg=Private Regions
 tile.um_privreg_pregion.name=Block region
 tile.um_privreg_barrier.name=Barrier of region
 tile.um_privreg_charger.name=Antimatter charger
+tile.um_privreg_rentstand1.name=Rental stand
 #|
 item.um_privreg_biocard.name=Region owner card
 item.um_privreg_antimatter.name=Antimatter container
