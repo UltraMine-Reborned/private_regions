@@ -225,6 +225,9 @@ public class ChunkLoaderManager
 			else
 				ticket = freeTickets.get(freeTickets.size()-1);
 
+			if(ticket == null)
+				return; // Forge limit exceeded
+
 			ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(cx, cz));
 			heldChunks.put(key, ticket);
 			if(ticket.getChunkList().size() == ticket.getChunkListDepth() && !freeTickets.isEmpty())
