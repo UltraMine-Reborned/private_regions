@@ -149,7 +149,7 @@ public final class Region implements IRegion
 	@Override
 	public boolean addChild(IRegion region)
 	{
-		return children.add((Region) region);
+		return !children.contains(region) && children.add((Region) region);
 	}
 
 	@Override
