@@ -485,7 +485,6 @@ public class RegionModuleBasic extends RegionModule
 		ItemStack is = e.entityPlayer.inventory.getCurrentItem();
 		boolean isBlock = is != null && Block.getBlockFromItem(is.getItem()) != Blocks.air && canBlock;
 		handleInteractCommon(e);
-		System.out.println(e.useItem + " " + e.useBlock);
 		if(e.useItem == Event.Result.DENY && e.useBlock == Event.Result.DENY && canBlock)
 			cmessage("privreg.msg.interact");
 		else if(e.useItem == Event.Result.DENY)
