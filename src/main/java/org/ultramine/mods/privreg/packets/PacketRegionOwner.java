@@ -4,11 +4,13 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gnu.trove.iterator.TIntIterator;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.PacketBuffer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ultramine.mods.privreg.Action;
+import org.ultramine.mods.privreg.InitCommon;
 import org.ultramine.mods.privreg.PrivateRegions;
 import org.ultramine.mods.privreg.owner.BasicOwner;
 import org.ultramine.mods.privreg.owner.RightRegistry;
@@ -16,6 +18,7 @@ import org.ultramine.mods.privreg.regions.Region;
 import org.ultramine.mods.privreg.regions.RegionManagerClient;
 import org.ultramine.mods.privreg.regions.RegionRights;
 import org.ultramine.network.UMPacket;
+import org.ultramine.server.util.InventoryUtil;
 
 import java.io.IOException;
 
@@ -94,7 +97,13 @@ public class PacketRegionOwner extends UMPacket
 				//changed = region.getOwnerStorage().add(owner);
 				throw new RuntimeException();
 			case REMOVE:
-				changed = region.getOwnerStorage().remove(owner.getProfile());
+				if(region.getOwnerStorage().remove(owner.getProfile()))
+				{
+					changed = true;
+					ItemStack card = new ItemStack(InitCommon.biocard);
+					InitCommon.biocard.setProfile(card, owner.getProfile());
+					InventoryUtil.addItem(net.playerEntity, card);
+				}
 				break;
 			case UPDATE:
 				for(TIntIterator it = owner.getRights().iterator(); it.hasNext();)
