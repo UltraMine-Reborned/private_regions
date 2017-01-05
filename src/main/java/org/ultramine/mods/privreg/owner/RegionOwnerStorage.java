@@ -76,11 +76,13 @@ public class RegionOwnerStorage
 
 	public boolean update(BasicOwner owner)
 	{
-		if(!isOwner(owner.getProfile()))
+		boolean isDefaultOwner = owner.getProfile().getId().equals(DEFAULT_OWNER_UUID);
+		if(!isDefaultOwner && !isOwner(owner.getProfile()))
 			return false;
-		owners.put(owner.getProfile().getId(), owner);
-		if(owner.getProfile().getId().equals(DEFAULT_OWNER_UUID))
+		if(isDefaultOwner)
 			defaultOwner = owner;
+		else
+			owners.put(owner.getProfile().getId(), owner);
 		return true;
 	}
 
