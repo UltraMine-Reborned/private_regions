@@ -93,6 +93,8 @@ public class ItemBiometricCard extends Item
 	@Override
 	public boolean onItemUseFirst(ItemStack is, EntityPlayer player, World world, int x, int y, int z, int side, float ox, float oy, float oz)
 	{
+		if(world.isRemote)
+			return false;
 		if(world.getBlock(x, y, z) == InitCommon.region)
 		{
 			TileBlockRegion te = (TileBlockRegion)world.getTileEntity(x, y, z);
@@ -118,7 +120,7 @@ public class ItemBiometricCard extends Item
 		return profile != null ? super.getItemStackDisplayName(is) + " - " + profile.getName() : super.getItemStackDisplayName(is);
 	}
 
-	private void encode(ItemStack is, EntityPlayer p)
+	public void encode(ItemStack is, EntityPlayer p)
 	{
 		GameProfile profile = getProfile(is);
 
@@ -128,7 +130,7 @@ public class ItemBiometricCard extends Item
 			setProfile(is, p.getGameProfile());
 	}
 
-	private void setProfile(ItemStack is, GameProfile profile)
+	public void setProfile(ItemStack is, GameProfile profile)
 	{
 		if(profile == null)
 		{
@@ -145,7 +147,7 @@ public class ItemBiometricCard extends Item
 		is.setItemDamage(1);
 	}
 
-	private GameProfile getProfile(ItemStack is)
+	public GameProfile getProfile(ItemStack is)
 	{
 		if(!is.hasTagCompound())
 			return null;
