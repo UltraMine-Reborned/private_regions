@@ -613,7 +613,8 @@ public class RegionModuleBasic extends RegionModule
 			case BLOCK_EVENT:
 			{
 				Block block = proxy.getWorld().getBlock(obj.getX(), obj.getY(), obj.getZ());
-				if(!region.getShape().contains(new BlockPos(obj.getX(), obj.getY(), obj.getZ())) && (block == Blocks.piston || block == Blocks.sticky_piston))
+				if(!region.getShape().contains(new BlockPos(obj.getX(), obj.getY(), obj.getZ())) && (block == Blocks.piston || block == Blocks.sticky_piston ||
+						block == Blocks.piston_extension || block == Blocks.piston_head))
 					return true;
 				break;
 			}
