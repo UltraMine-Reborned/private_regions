@@ -323,7 +323,7 @@ public class RegionModuleBasic extends RegionModule
 	@SideOnly(Side.SERVER)
 	public boolean cancelBlockExplosion()
 	{
-		return prohibitDefault();
+		return prohibitDefault(RIGHT_BASIC, false) || prohibitDefault(RIGHT_BREAK_BLOCKS, false);
 	}
 
 	@SideOnly(Side.SERVER)
