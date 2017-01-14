@@ -73,6 +73,7 @@ public class RegionModuleBasic extends RegionModule
 	public static final OwnerRight RIGHT_ATTACK_GUESTS = RightRegistry.register("modbasic", "attack_guests");
 	public static final OwnerRight RIGHT_ATTACK_ANIMALS = RightRegistry.register("modbasic", "attack_animals");
 	public static final OwnerRight RIGHT_ATTACK_MONSTERS = RightRegistry.register("modbasic", "attack_monsters");
+	public static final OwnerRight RIGHT_ATTACK_OTHER_ENTITIES = RightRegistry.register("modbasic", "attack_other_entities");
 
 	private boolean disableItemsMode;
 	private String[] disableItemsRaw = new String[0];
@@ -156,6 +157,7 @@ public class RegionModuleBasic extends RegionModule
 		this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_GUESTS, true);
 		this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_ANIMALS, true);
 		this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_MONSTERS, true);
+		this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_OTHER_ENTITIES, true);
 
 	}
 
@@ -175,6 +177,7 @@ public class RegionModuleBasic extends RegionModule
 			this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_GUESTS, false);
 			this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_ANIMALS, false);
 			this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_MONSTERS, false);
+			this.region.getOwnerStorage().registerRight(RIGHT_ATTACK_OTHER_ENTITIES, false);
 		}
 		super.onRemoveFromRegion();
 	}
@@ -375,6 +378,14 @@ public class RegionModuleBasic extends RegionModule
 			{
 				e.setCanceled(true);
 				player.addChatMessage(new ChatComponentTranslation("privreg.msg.monsters"));
+			}
+		}
+		else
+		{
+			if(!region.hasRight(profile, RIGHT_ATTACK_OTHER_ENTITIES))
+			{
+				e.setCanceled(true);
+				player.addChatMessage(new ChatComponentTranslation("privreg.msg.other_entities"));
 			}
 		}
 	}

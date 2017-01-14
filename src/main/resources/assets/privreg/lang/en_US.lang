@@ -82,6 +82,7 @@ privreg.right.modbasic.attack_owners=Damage owners
 privreg.right.modbasic.attack_guests=Damage guests
 privreg.right.modbasic.attack_animals=Damage animals
 privreg.right.modbasic.attack_monsters=Damage monsters
+privreg.right.modbasic.attack_other_entities=Damage other entities
 #|
 privreg.gui.charger.action=Convert
 #|
@@ -120,6 +121,7 @@ privreg.msg.interact.blocks=Using of blocks is prohibited in the area
 privreg.msg.pvp=§cPvP is prohibited in the area
 privreg.msg.animals=§cDamage animals is prohibited in the area
 privreg.msg.monsters=§cDamage monsters is prohibited in the area
+privreg.msg.other_entities=§cDamage other entities is prohibited in the area
 privreg.msg.command=§cUsing of this command is prohibited in the area
 
 item.privreg.region.name=Region block
