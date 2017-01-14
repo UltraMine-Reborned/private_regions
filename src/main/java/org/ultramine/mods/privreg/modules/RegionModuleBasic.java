@@ -11,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -666,7 +668,12 @@ public class RegionModuleBasic extends RegionModule
 				}
 				break;
 			case ENTITY:
+			{
+				Entity entity = obj.getEntity();
+				if(entity.getClass() == EntityWither.class || entity.getClass() == EntityDragon.class)
+					return true;
 				break;
+			}
 			case ENTITY_WEATHER:
 				break;
 			case WEATHER:
