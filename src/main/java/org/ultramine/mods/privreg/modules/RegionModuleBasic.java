@@ -248,7 +248,8 @@ public class RegionModuleBasic extends RegionModule
 	@SideOnly(Side.SERVER)
 	public void onBlockChange(SetBlockEvent e)
 	{
-		if(prohibitRaw(WorldEventProxy.getCurrent()))
+		if(e.world.getBlock(e.x, e.y, e.z) == Blocks.farmland && e.newBlock == Blocks.dirt && prohibitDefault(RIGHT_BREAK_BLOCKS, false) ||
+				prohibitRaw(WorldEventProxy.getCurrent()))
 			e.setCanceled(true);
 	}
 
