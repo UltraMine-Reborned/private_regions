@@ -5,30 +5,27 @@ import org.ultramine.network.TEPacket;
 
 import java.io.IOException;
 
-public class PacketTEBlockRegion extends TEPacket
-{
-	private int id;
+public class PacketTEBlockRegion extends TEPacket {
+    private int id;
 
-	public PacketTEBlockRegion(){}
-	public PacketTEBlockRegion(int id)
-	{
-		this.id = id;
-	}
+    public PacketTEBlockRegion() {
+    }
 
-	public int getRegionID()
-	{
-		return id;
-	}
+    public PacketTEBlockRegion(int id) {
+        this.id = id;
+    }
 
-	@Override
-	public void writePacketData(PacketBuffer buf) throws IOException
-	{
-		buf.writeInt(id);
-	}
+    public int getRegionID() {
+        return id;
+    }
 
-	@Override
-	public void readPacketData(PacketBuffer buf) throws IOException
-	{
-		id = buf.readInt();
-	}
+    @Override
+    public void writePacketData(PacketBuffer buf) throws IOException {
+        buf.writeInt(id);
+    }
+
+    @Override
+    public void readPacketData(PacketBuffer buf) throws IOException {
+        id = buf.readInt();
+    }
 }

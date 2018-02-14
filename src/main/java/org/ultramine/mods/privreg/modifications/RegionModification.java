@@ -8,72 +8,58 @@ import org.ultramine.mods.privreg.item.ItemRegionModification;
 
 import java.util.List;
 
-public abstract class RegionModification
-{
-	protected final RegionModificationsRegistry.RegistryItem registryItem;
-	protected int power;
-	protected int count;
+public abstract class RegionModification {
+    protected final RegionModificationsRegistry.RegistryItem registryItem;
+    protected int power;
+    protected int count;
 
-	public RegionModification(int power, int count)
-	{
-		registryItem = RegionModificationsRegistry.instance().getByModificationClass(getClass());
-		this.power = power;
-		this.count = count;
-	}
+    public RegionModification(int power, int count) {
+        registryItem = RegionModificationsRegistry.instance().getByModificationClass(getClass());
+        this.power = power;
+        this.count = count;
+    }
 
-	public int getMaxChargeAddition()
-	{
-		return 0;
-	}
+    public static RegionModification fromNBT(NBTTagCompound nbt) {
+        int id = nbt.getByte("i");
+        RegionModificationsRegistry.RegistryItem item = RegionModificationsRegistry.instance().getById(id);
+        try {
+            return item.getModificationClass().getDeclaredConstructor(int.class, int.class).newInstance(nbt.getShort("p"), nbt.getShort("c"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public int getMaxTacktsAddition()
-	{
-		return 0;
-	}
+    public static RegionModification wrapItemStack(ItemStack is) {
+        RegionModificationsRegistry.RegistryItem item = ((ItemRegionModification) is.getItem()).getModification();
+        try {
+            return item.getModificationClass().getDeclaredConstructor(int.class, int.class).newInstance(is.getItemDamage(), is.stackSize);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@SideOnly(Side.CLIENT)
-	public abstract void addInformation(ItemStack is, List<String> list);
+    public int getMaxChargeAddition() {
+        return 0;
+    }
 
-	public abstract List<ItemStack> getCreativeStackList();
+    public int getMaxTacktsAddition() {
+        return 0;
+    }
 
-	public ItemStack toItemStack()
-	{
-		return new ItemStack(registryItem.getItem(), count, power);
-	}
+    @SideOnly(Side.CLIENT)
+    public abstract void addInformation(ItemStack is, List<String> list);
 
-	public NBTTagCompound toNBT()
-	{
-		NBTTagCompound nbt = new NBTTagCompound();
-		nbt.setByte("i", (byte)registryItem.getId());
-		nbt.setShort("p", (short)power);
-		nbt.setShort("c", (short) count);
-		return nbt;
-	}
+    public abstract List<ItemStack> getCreativeStackList();
 
-	public static RegionModification fromNBT(NBTTagCompound nbt)
-	{
-		int id = nbt.getByte("i");
-		RegionModificationsRegistry.RegistryItem item = RegionModificationsRegistry.instance().getById(id);
-		try
-		{
-			return item.getModificationClass().getDeclaredConstructor(int.class, int.class).newInstance(nbt.getShort("p"), nbt.getShort("c"));
-		}
-		catch(Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    public ItemStack toItemStack() {
+        return new ItemStack(registryItem.getItem(), count, power);
+    }
 
-	public static RegionModification wrapItemStack(ItemStack is)
-	{
-		RegionModificationsRegistry.RegistryItem item = ((ItemRegionModification)is.getItem()).getModification();
-		try
-		{
-			return item.getModificationClass().getDeclaredConstructor(int.class, int.class).newInstance(is.getItemDamage(), is.stackSize);
-		}
-		catch(Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-	}
+    public NBTTagCompound toNBT() {
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setByte("i", (byte) registryItem.getId());
+        nbt.setShort("p", (short) power);
+        nbt.setShort("c", (short) count);
+        return nbt;
+    }
 }

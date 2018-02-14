@@ -2,19 +2,18 @@ package org.ultramine.regions;
 
 import java.util.List;
 
-public interface IRegion
-{
-	int getID();
+public interface IRegion {
+    int getID();
 
-	Rectangle getShape();
+    Rectangle getShape();
 
-	IRegion getParent();
+    IRegion getParent();
 
-	List<IRegion> getChildren();
+    List<IRegion> getChildren();
 
-	boolean addChild(IRegion region);
+    boolean addChild(IRegion region);
 
-	boolean removeChild(IRegion region);
+    boolean removeChild(IRegion region);
 
-	void onChildAreaChanged(IRegion region);
+    void onChildAreaChanged(IRegion region);
 }

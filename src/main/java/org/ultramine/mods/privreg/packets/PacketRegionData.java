@@ -15,65 +15,62 @@ import org.ultramine.regions.Rectangle;
 
 import java.io.IOException;
 
-public class PacketRegionData extends UMPacket
-{
-	private int id;
-	private BlockPos blockCoord;
-	private Rectangle shape;
-	private int parentID;
-	private double charge;
-	private RegionOwnerStorage ros; //TODO
-	private NBTTagCompound modules;
+public class PacketRegionData extends UMPacket {
+    private int id;
+    private BlockPos blockCoord;
+    private Rectangle shape;
+    private int parentID;
+    private double charge;
+    private RegionOwnerStorage ros; //TODO
+    private NBTTagCompound modules;
 
-	public PacketRegionData(){}
-	public PacketRegionData(Region region)
-	{
-		this.id = region.getID();
-		this.blockCoord = region.getBlock();
-		this.shape = region.getShape();
-		this.parentID = region.hasParent() ? region.getParent().getID() : -1;
-		this.charge = region.getCharge();
-		ros = region.getOwnerStorage();
-		this.modules = region.getModulesStorage().toNBT();
-	}
+    public PacketRegionData() {
+    }
 
-	@Override
-	public void write(PacketBuffer buf) throws IOException
-	{
-		buf.writeInt(id);
-		blockCoord.write(buf);
-		shape.write(buf);
-		buf.writeInt(parentID);
-		buf.writeDouble(charge);
-		ros.write(buf);
-		buf.writeNBTTagCompoundToBuffer(modules);
-	}
+    public PacketRegionData(Region region) {
+        this.id = region.getID();
+        this.blockCoord = region.getBlock();
+        this.shape = region.getShape();
+        this.parentID = region.hasParent() ? region.getParent().getID() : -1;
+        this.charge = region.getCharge();
+        ros = region.getOwnerStorage();
+        this.modules = region.getModulesStorage().toNBT();
+    }
 
-	@Override
-	public void read(PacketBuffer buf) throws IOException
-	{
-		id = buf.readInt();
-		blockCoord = BlockPos.read(buf);
-		shape = Rectangle.read(buf);
-		parentID = buf.readInt();
-		charge = buf.readDouble();
-		ros = new RegionOwnerStorage(null);
-		ros.read(buf);
-		modules = buf.readNBTTagCompoundFromBuffer();
-	}
+    @Override
+    public void write(PacketBuffer buf) throws IOException {
+        buf.writeInt(id);
+        blockCoord.write(buf);
+        shape.write(buf);
+        buf.writeInt(parentID);
+        buf.writeDouble(charge);
+        ros.write(buf);
+        buf.writeNBTTagCompoundToBuffer(modules);
+    }
 
-	@SideOnly(Side.CLIENT)
-	public void processClient(NetHandlerPlayClient net)
-	{
-		Region region = new Region(RegionManagerClient.getInstance(), id, false);
-		region.setBlock(blockCoord);
-		region.setShape(shape);
-		region.parentWaiting = parentID;
-		region.setCharge(charge);
-		ros.region = region;
-		region.ownerStorage = ros;
-		region.setModulesStorage(RegionModulesStorage.parseNBT(modules));
+    @Override
+    public void read(PacketBuffer buf) throws IOException {
+        id = buf.readInt();
+        blockCoord = BlockPos.read(buf);
+        shape = Rectangle.read(buf);
+        parentID = buf.readInt();
+        charge = buf.readDouble();
+        ros = new RegionOwnerStorage(null);
+        ros.read(buf);
+        modules = buf.readNBTTagCompoundFromBuffer();
+    }
 
-		RegionManagerClient.getInstance().addRegion(region);
-	}
+    @SideOnly(Side.CLIENT)
+    public void processClient(NetHandlerPlayClient net) {
+        Region region = new Region(RegionManagerClient.getInstance(), id, false);
+        region.setBlock(blockCoord);
+        region.setShape(shape);
+        region.parentWaiting = parentID;
+        region.setCharge(charge);
+        ros.region = region;
+        region.ownerStorage = ros;
+        region.setModulesStorage(RegionModulesStorage.parseNBT(modules));
+
+        RegionManagerClient.getInstance().addRegion(region);
+    }
 }

@@ -21,67 +21,54 @@ import org.ultramine.regions.Rectangle;
 import java.util.Set;
 
 @SideOnly(Side.SERVER)
-public class IC2EventHandler
-{
-	private static Region getRegion(World world, int x, int y, int z)
-	{
-		return PrivateRegions.instance().getServerRegion(world.provider.dimensionId, x, y, z);
-	}
+public class IC2EventHandler {
+    private static Region getRegion(World world, int x, int y, int z) {
+        return PrivateRegions.instance().getServerRegion(world.provider.dimensionId, x, y, z);
+    }
 
-	private void handleExplosion(Event e, World world, double x, double y, double z, double r)
-	{
-		Set<IRegion> regions = PrivateRegions.instance().getServerRegionManager(world.provider.dimensionId).getRegionsInRange(
-				new Rectangle(new BlockPos(x-r, y-r, z-r), new BlockPos(x+r, y+r, z+r)));
-		if(!regions.isEmpty())
-		{
-			for(IRegion region2 : regions)
-			{
-				Region region = (Region)region2;
-				if(region.hasModule(RegionModuleBasic.class) && region.getModuleWithClass(RegionModuleBasic.class).cancelBlockExplosion() ||
-					region.hasModule(RegionModuleExplosion.class))
-				{
-					e.setCanceled(true);
-					break;
-				}
-			}
-		}
-	}
+    private void handleExplosion(Event e, World world, double x, double y, double z, double r) {
+        Set<IRegion> regions = PrivateRegions.instance().getServerRegionManager(world.provider.dimensionId).getRegionsInRange(
+                new Rectangle(new BlockPos(x - r, y - r, z - r), new BlockPos(x + r, y + r, z + r)));
+        if (!regions.isEmpty()) {
+            for (IRegion region2 : regions) {
+                Region region = (Region) region2;
+                if (region.hasModule(RegionModuleBasic.class) && region.getModuleWithClass(RegionModuleBasic.class).cancelBlockExplosion() ||
+                        region.hasModule(RegionModuleExplosion.class)) {
+                    e.setCanceled(true);
+                    break;
+                }
+            }
+        }
+    }
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onExplosionEvent(ExplosionEvent e)
-	{
-		handleExplosion(e, e.world, e.x, e.y, e.z, Math.max(e.rangeLimit, e.radiationRange));
-	}
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onExplosionEvent(ExplosionEvent e) {
+        handleExplosion(e, e.world, e.x, e.y, e.z, Math.max(e.rangeLimit, e.radiationRange));
+    }
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onLaserHitsBlockEvent(LaserEvent.LaserHitsBlockEvent e)
-	{
-		Region region = getRegion(e.world, e.x, e.y, e.z);
-		if(region != null && region.isActive())
-		{
-			if(region.hasModule(RegionModuleBasic.class))
-			{
-				GameProfile owner = e.lasershot.getObjectOwner();
-				if(owner == null || !region.hasRight(owner, RegionModuleBasic.RIGHT_BREAK_BLOCKS))
-					e.setCanceled(true);
-			}
-		}
-	}
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onLaserHitsBlockEvent(LaserEvent.LaserHitsBlockEvent e) {
+        Region region = getRegion(e.world, e.x, e.y, e.z);
+        if (region != null && region.isActive()) {
+            if (region.hasModule(RegionModuleBasic.class)) {
+                GameProfile owner = e.lasershot.getObjectOwner();
+                if (owner == null || !region.hasRight(owner, RegionModuleBasic.RIGHT_BREAK_BLOCKS))
+                    e.setCanceled(true);
+            }
+        }
+    }
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onLaserHitsEntityEvent(LaserEvent.LaserHitsEntityEvent e)
-	{
-		Region region = getRegion(e.world, MathHelper.floor_double(e.hitentity.posX), MathHelper.floor_double(e.hitentity.posY), MathHelper.floor_double(e.hitentity.posZ));
-		if(region != null && region.isActive())
-		{
-			if(region.hasModule(RegionModuleBasic.class))
-				region.getModuleWithClass(RegionModuleBasic.class).handlePvpEvent(e, e.hitentity, true);
-		}
-	}
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onLaserHitsEntityEvent(LaserEvent.LaserHitsEntityEvent e) {
+        Region region = getRegion(e.world, MathHelper.floor_double(e.hitentity.posX), MathHelper.floor_double(e.hitentity.posY), MathHelper.floor_double(e.hitentity.posZ));
+        if (region != null && region.isActive()) {
+            if (region.hasModule(RegionModuleBasic.class))
+                region.getModuleWithClass(RegionModuleBasic.class).handlePvpEvent(e, e.hitentity, true);
+        }
+    }
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onLaserExplodesEvent(LaserEvent.LaserExplodesEvent e)
-	{
-		handleExplosion(e, e.world, e.lasershot.posX, e.lasershot.posY, e.lasershot.posZ, e.explosionpower / 0.4d);
-	}
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onLaserExplodesEvent(LaserEvent.LaserExplodesEvent e) {
+        handleExplosion(e, e.world, e.lasershot.posX, e.lasershot.posY, e.lasershot.posZ, e.explosionpower / 0.4d);
+    }
 }

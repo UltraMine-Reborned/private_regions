@@ -12,33 +12,29 @@ import org.ultramine.network.UMPacket;
 
 import java.io.IOException;
 
-public class PacketGuiRentServerTime extends UMPacket
-{
-	private long time;
+public class PacketGuiRentServerTime extends UMPacket {
+    private long time;
 
-	public PacketGuiRentServerTime(){}
+    public PacketGuiRentServerTime() {
+    }
 
-	@Override
-	public void write(PacketBuffer buf) throws IOException
-	{
-		buf.writeLong(System.currentTimeMillis());
-	}
+    @Override
+    public void write(PacketBuffer buf) throws IOException {
+        buf.writeLong(System.currentTimeMillis());
+    }
 
-	@Override
-	public void read(PacketBuffer buf) throws IOException
-	{
-		time = buf.readLong();
-	}
+    @Override
+    public void read(PacketBuffer buf) throws IOException {
+        time = buf.readLong();
+    }
 
-	@SideOnly(Side.CLIENT)
-	public void processClient(NetHandlerPlayClient net)
-	{
-		GuiScreen gui = Minecraft.getMinecraft().currentScreen;
-		if(gui instanceof GuiScreenToGui)
-		{
-			GuiScreenToGui gui1 = (GuiScreenToGui) gui;
-			if(gui1.gui instanceof GuiRent)
-				((GuiRent) gui1.gui).acceptServerTime(time);
-		}
-	}
+    @SideOnly(Side.CLIENT)
+    public void processClient(NetHandlerPlayClient net) {
+        GuiScreen gui = Minecraft.getMinecraft().currentScreen;
+        if (gui instanceof GuiScreenToGui) {
+            GuiScreenToGui gui1 = (GuiScreenToGui) gui;
+            if (gui1.gui instanceof GuiRent)
+                ((GuiRent) gui1.gui).acceptServerTime(time);
+        }
+    }
 }

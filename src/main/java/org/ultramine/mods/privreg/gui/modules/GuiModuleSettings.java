@@ -15,68 +15,59 @@ import org.ultramine.mods.privreg.packets.PacketRegionModule;
 import static org.ultramine.util.I18n.tlt;
 
 @SideOnly(Side.CLIENT)
-public abstract class GuiModuleSettings extends GuiStyled
-{
-	private static final ResourceLocation BG = new ResourceLocation("privreg:textures/gui/ownerrights.png");
+public abstract class GuiModuleSettings extends GuiStyled {
+    private static final ResourceLocation BG = new ResourceLocation("privreg:textures/gui/ownerrights.png");
 
-	private final GuiRegionModules parent;
+    private final GuiRegionModules parent;
 
-	GuiModuleSettings(GuiRegionModules p)
-	{
-		this.parent = p;
+    GuiModuleSettings(GuiRegionModules p) {
+        this.parent = p;
 
-		setBG(BG);
-		setSize(180, 130);
-		//setPadding(19, 9);
-	}
+        setBG(BG);
+        setSize(180, 130);
+        //setPadding(19, 9);
+    }
 
-	public final void close()
-	{
-		onClose();
-		getParent().handler = null;
-		PacketRegionModule packet = getModule().createPacket(Action.UPDATE);
-		if (packet != null)
-			packet.sendToServer();
-	}
+    public final void close() {
+        onClose();
+        getParent().handler = null;
+        PacketRegionModule packet = getModule().createPacket(Action.UPDATE);
+        if (packet != null)
+            packet.sendToServer();
+    }
 
 
-	@Override
-	public void relayout()
-	{
-		controlList.clear();
-		addElement(new ElementButton(0, 166, 6, 8, 8, "X"));
-		addElement(new ElementLabel(10, 6, tlt("privreg.gui.module.settings") + " " + getModule().getClass().getSimpleName()));
-		addElements();
-	}
+    @Override
+    public void relayout() {
+        controlList.clear();
+        addElement(new ElementButton(0, 166, 6, 8, 8, "X"));
+        addElement(new ElementLabel(10, 6, tlt("privreg.gui.module.settings") + " " + getModule().getClass().getSimpleName()));
+        addElements();
+    }
 
 
-	@Override
-	public void actionPerformed(int id, IGuiElement element, Object... data)
-	{
-		if (id == 0) close();
-	}
+    @Override
+    public void actionPerformed(int id, IGuiElement element, Object... data) {
+        if (id == 0) close();
+    }
 
-	@Override
-	public void keyTyped(char c, int code)
-	{
-		if (code == 1)
-		{
-			close();
-		} else
-		{
-			super.keyTyped(c, code);
-		}
-	}
+    @Override
+    public void keyTyped(char c, int code) {
+        if (code == 1) {
+            close();
+        } else {
+            super.keyTyped(c, code);
+        }
+    }
 
 
-	public GuiRegionModules getParent()
-	{
-		return parent;
-	}
+    public GuiRegionModules getParent() {
+        return parent;
+    }
 
-	public abstract RegionModule getModule();
+    public abstract RegionModule getModule();
 
-	protected abstract void onClose();
+    protected abstract void onClose();
 
-	protected abstract void addElements();
+    protected abstract void addElements();
 }

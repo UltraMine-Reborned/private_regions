@@ -17,11 +17,7 @@ import org.ultramine.mods.privreg.owner.BasicOwner;
 import org.ultramine.mods.privreg.packets.PacketRegionExpand;
 import org.ultramine.mods.privreg.tiles.TileBlockRegion;
 import org.ultramine.network.UMPacket;
-import org.ultramine.regions.BlockPos;
-import org.ultramine.regions.IRegion;
-import org.ultramine.regions.IRegionManager;
-import org.ultramine.regions.Rectangle;
-import org.ultramine.regions.RegionMap;
+import org.ultramine.regions.*;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -29,272 +25,234 @@ import java.util.List;
 import java.util.Set;
 
 @SideOnly(Side.SERVER)
-public class RegionManager implements IRegionManager
-{
-	public static final Logger log = LogManager.getLogger();
+public class RegionManager implements IRegionManager {
+    public static final Logger log = LogManager.getLogger();
 
-	private final MinecraftServer server;
-	private final int dimension;
-	private final IRegionDataProvider dataProvider;
-	private final IntObjMap<Region> idToRegion = HashIntObjMaps.newMutableMap();
-	private int nextRegionId;
+    private final MinecraftServer server;
+    private final int dimension;
+    private final IRegionDataProvider dataProvider;
+    private final IntObjMap<Region> idToRegion = HashIntObjMaps.newMutableMap();
+    private final RegionMap regionMap = new RegionMap();
+    private final List<Region> regionsToRemove = new ArrayList<Region>();
+    private int nextRegionId;
+    private RegionTracker tracker = new RegionTracker(this);
+    private boolean canRemoveRegionNow = true;
 
-	private final RegionMap regionMap = new RegionMap();
+    public RegionManager(MinecraftServer server, int dimension, IRegionDataProvider dataProvider) {
+        this.server = server;
+        this.dimension = dimension;
+        this.dataProvider = dataProvider;
+    }
 
-	private RegionTracker tracker = new RegionTracker(this);
+    public void loadRegions() {
+        dataProvider.init(this);
+        List<Region> list = new ArrayList<Region>();
+        dataProvider.loadAll(list);
+        int maxID = 0;
+        for (Region reg : list)
+            if (reg.getID() > maxID)
+                maxID = reg.getID();
+        nextRegionId = maxID + 1;
+        for (Region reg : list) {
+            reg.setWorld(dimension);
+            idToRegion.put(reg.getID(), reg);
+            regionMap.add(reg);
+        }
 
-	private boolean canRemoveRegionNow = true;
-	private final List<Region> regionsToRemove = new ArrayList<Region>();
+        for (Region reg : list)
+            if (reg.parentWaiting != -1)
+                reg.setParent(idToRegion.get(reg.parentWaiting));
 
-	public RegionManager(MinecraftServer server, int dimension, IRegionDataProvider dataProvider)
-	{
-		this.server = server;
-		this.dimension = dimension;
-		this.dataProvider = dataProvider;
-	}
+        for (Region reg : list) {
+            if (checkOrRestore(reg))
+                reg.onLoad();
+            else
+                destroyRegion(reg);
+        }
+    }
 
-	public void loadRegions()
-	{
-		dataProvider.init(this);
-		List<Region> list = new ArrayList<Region>();
-		dataProvider.loadAll(list);
-		int maxID = 0;
-		for(Region reg : list)
-			if(reg.getID() > maxID)
-				maxID = reg.getID();
-		nextRegionId = maxID + 1;
-		for(Region reg : list)
-		{
-			reg.setWorld(dimension);
-			idToRegion.put(reg.getID(), reg);
-			regionMap.add(reg);
-		}
+    private boolean checkOrRestore(Region reg) {
+        BlockPos b = reg.getBlock();
+        MinecraftServer mcserver = server;
+        if (mcserver != null) {
+            World world = mcserver.worldServerForDimension(reg.getWorld());
+            if (world.getBlock(b.x, b.y, b.z) != InitCommon.region) {
+                log.warn("Loaded region ID:{} for NOT RegionBlock [{}]({}, {}, {}) Trying to restore block", reg.getID(), reg.getWorld(), b.x, b.y, b.z);
+                world.setBlockSilently(b.x, b.y, b.z, InitCommon.region, 0, 3);
+                TileBlockRegion te = (TileBlockRegion) world.getTileEntity(b.x, b.y, b.z);
+                if (te != null) {
+                    te.unsafeSetRegion(reg);
+                    log.info("RegionBlock successfuly restored");
+                } else {
+                    log.warn("Failed to restore RegionBlock (TileEntity was NOT created)");
+                    return false;
+                }
+            }
+        }
 
-		for(Region reg : list)
-			if(reg.parentWaiting != -1)
-				reg.setParent(idToRegion.get(reg.parentWaiting));
+        return true;
+    }
 
-		for(Region reg : list)
-		{
-			if(checkOrRestore(reg))
-				reg.onLoad();
-			else
-				destroyRegion(reg);
-		}
-	}
+    private int getNextRegionID() {
+        return nextRegionId++;
+    }
 
-	private boolean checkOrRestore(Region reg)
-	{
-		BlockPos b = reg.getBlock();
-		MinecraftServer mcserver = server;
-		if (mcserver != null)
-		{
-			World world = mcserver.worldServerForDimension(reg.getWorld());
-			if(world.getBlock(b.x, b.y, b.z) != InitCommon.region)
-			{
-				log.warn("Loaded region ID:{} for NOT RegionBlock [{}]({}, {}, {}) Trying to restore block", reg.getID(), reg.getWorld(), b.x, b.y, b.z);
-				world.setBlockSilently(b.x, b.y, b.z, InitCommon.region, 0, 3);
-				TileBlockRegion te = (TileBlockRegion) world.getTileEntity(b.x, b.y, b.z);
-				if(te != null)
-				{
-					te.unsafeSetRegion(reg);
-					log.info("RegionBlock successfuly restored");
-				}
-				else
-				{
-					log.warn("Failed to restore RegionBlock (TileEntity was NOT created)");
-					return false;
-				}
-			}
-		}
+    public @Nonnull
+    Region createRegion(TileBlockRegion te, GameProfile player) throws RegionCreationException {
+        final int cd = RegionConfig.CheckDistance;
+        BlockPos block = BlockPos.fromTileEntity(te);
+        Rectangle shape = block.toRect().expandAll(1);
+        int world = te.getWorldObj().provider.dimensionId;
+        if (world != dimension)
+            throw new IllegalArgumentException("Wrong RegionManager for dimension " + world + ", used " + dimension);
 
-		return true;
-	}
+        Region parent = null;
+        if (hasRegionsInRange(shape)) {
+            Region found = getRegion(block);
+            if (found != null) {
+                BlockPos b = found.getBlock();
+                if (found.getShape().contains(shape) && !shape.isIntersects(b.toRect().expandAll(1))) {
+                    if (found.hasRight(player, RegionRights.PLACE_SUBREGIONS)) {
+                        parent = found;
+                    }
+                }
+            }
+        }
 
-	private int getNextRegionID()
-	{
-		return nextRegionId++;
-	}
+        if (parent == null)
+            shape = shape.setSide(ForgeDirection.UP, 255).setSide(ForgeDirection.DOWN, 0);
+        if (parent == null && hasRegionsInRange(shape.expandAll(cd)))
+            throw new RegionCreationException();
 
-	public @Nonnull Region createRegion(TileBlockRegion te, GameProfile player) throws RegionCreationException
-	{
-		final int cd = RegionConfig.CheckDistance;
-		BlockPos block = BlockPos.fromTileEntity(te);
-		Rectangle shape = block.toRect().expandAll(1);
-		int world = te.getWorldObj().provider.dimensionId;
-		if(world != dimension)
-			throw new IllegalArgumentException("Wrong RegionManager for dimension "+world+", used "+dimension);
+        Region region = new Region(this, getNextRegionID(), true);
+        region.setBlock(block);
+        region.setShape(shape);
+        region.setWorld(world);
+        if (parent != null)
+            region.setParent(parent);
+        region.onCreate();
 
-		Region parent = null;
-		if(hasRegionsInRange(shape))
-		{
-			Region found = getRegion(block);
-			if(found != null)
-			{
-				BlockPos b = found.getBlock();
-				if(found.getShape().contains(shape) && !shape.isIntersects(b.toRect().expandAll(1)))
-				{
-					if(found.hasRight(player, RegionRights.PLACE_SUBREGIONS))
-					{
-						parent = found;
-					}
-				}
-			}
-		}
+        BasicOwner owner = new BasicOwner(player);
+        owner.setRight(RegionRights.CREATOR, true);
+        region.getOwnerStorage().add(owner);
 
-		if(parent == null)
-			shape = shape.setSide(ForgeDirection.UP, 255).setSide(ForgeDirection.DOWN, 0);
-		if (parent == null && hasRegionsInRange(shape.expandAll(cd)))
-			throw new RegionCreationException();
+        idToRegion.put(region.getID(), region);
+        dataProvider.createRegion(region);
 
-		Region region = new Region(this, getNextRegionID(), true);
-		region.setBlock(block);
-		region.setShape(shape);
-		region.setWorld(world);
-		if (parent != null)
-			region.setParent(parent);
-		region.onCreate();
+        regionMap.add(region);
+        tracker.onRegionCreate(region);
 
-		BasicOwner owner = new BasicOwner(player);
-		owner.setRight(RegionRights.CREATOR, true);
-		region.getOwnerStorage().add(owner);
+        return region;
+    }
 
-		idToRegion.put(region.getID(), region);
-		dataProvider.createRegion(region);
+    public Region dangerousCreateRegion(Rectangle shape, BlockPos block, int dimension) {
+        Region region = new Region(this, getNextRegionID(), true);
 
-		regionMap.add(region);
-		tracker.onRegionCreate(region);
+        region.setShape(shape);
+        region.setWorld(dimension);
+        region.setBlock(block);
 
-		return region;
-	}
+        region.onCreate();
 
-	public Region dangerousCreateRegion(Rectangle shape, BlockPos block, int dimension)
-	{
-		Region region = new Region(this, getNextRegionID(), true);
+        idToRegion.put(region.getID(), region);
+        dataProvider.createRegion(region);
 
-		region.setShape(shape);
-		region.setWorld(dimension);
-		region.setBlock(block);
+        regionMap.add(region);
+        tracker.onRegionCreate(region);
 
-		region.onCreate();
+        return region;
+    }
 
-		idToRegion.put(region.getID(), region);
-		dataProvider.createRegion(region);
+    public void saveRegion(Region region) {
+        dataProvider.saveRegion(region);
+        region.setChanged(false);
+    }
 
-		regionMap.add(region);
-		tracker.onRegionCreate(region);
+    public void saveAllRegion() {
+        dataProvider.saveAll(idToRegion.values());
+    }
 
-		return region;
-	}
+    public void onTick(int tick) {
+        if (tick % 101 == 0) {
+            canRemoveRegionNow = false;
+            for (Region region : idToRegion.values())
+                region.onUpdate();
+            canRemoveRegionNow = true;
+            for (Region region : regionsToRemove)
+                idToRegion.remove(region.getID());
+        }
+    }
 
-	public void saveRegion(Region region)
-	{
-		dataProvider.saveRegion(region);
-		region.setChanged(false);
-	}
+    public void unload() {
+        saveAllRegion();
+        for (Region region : idToRegion.values())
+            region.onUnload();
+        dataProvider.close();
+    }
 
-	public void saveAllRegion()
-	{
-		dataProvider.saveAll(idToRegion.values());
-	}
+    public void destroyRegion(Region region) {
+        regionMap.remove(region);
+        region.onDestroy();
+        if (canRemoveRegionNow)
+            idToRegion.remove(region.getID());
+        else
+            regionsToRemove.add(region);
+        dataProvider.destroyRegion(region);
+        tracker.onRegionDestroy(region);
+    }
 
-	public void onTick(int tick)
-	{
-		if(tick % 101 == 0)
-		{
-			canRemoveRegionNow = false;
-			for(Region region : idToRegion.values())
-				region.onUpdate();
-			canRemoveRegionNow = true;
-			for(Region region : regionsToRemove)
-				idToRegion.remove(region.getID());
-		}
-	}
+    public Region getRegion(int id) {
+        return idToRegion.get(id);
+    }
 
-	public void unload()
-	{
-		saveAllRegion();
-		for(Region region : idToRegion.values())
-			region.onUnload();
-		dataProvider.close();
-	}
+    @Override
+    public Region getRegion(BlockPos point) {
+        return (Region) regionMap.get(point);
+    }
 
-	public void destroyRegion(Region region)
-	{
-		regionMap.remove(region);
-		region.onDestroy();
-		if(canRemoveRegionNow)
-			idToRegion.remove(region.getID());
-		else
-			regionsToRemove.add(region);
-		dataProvider.destroyRegion(region);
-		tracker.onRegionDestroy(region);
-	}
+    @Override
+    public Region getRegion(int x, int y, int z) {
+        return getRegion(new BlockPos(x, y, z));
+    }
 
-	public Region getRegion(int id)
-	{
-		return idToRegion.get(id);
-	}
+    @Override
+    public Set<IRegion> getRegionsInRange(Rectangle range) {
+        return regionMap.getInRange(range);
+    }
 
-	@Override
-	public Region getRegion(BlockPos point)
-	{
-		return (Region)regionMap.get(point);
-	}
+    @Override
+    public boolean hasRegionsInRange(Rectangle range) {
+        return regionMap.hasInRange(range);
+    }
 
-	@Override
-	public Region getRegion(int x, int y, int z)
-	{
-		return getRegion(new BlockPos(x, y, z));
-	}
+    public IntObjMap<Region> unsafeGetRegions() {
+        return idToRegion;
+    }
 
-	@Override
-	public Set<IRegion> getRegionsInRange(Rectangle range)
-	{
-		return regionMap.getInRange(range);
-	}
+    public RegionChangeResult expandRegion(Region region, ForgeDirection dir, int amount) {
+        RegionChangeResult res = region.canExpand(dir, amount);
+        if (res != RegionChangeResult.ALLOW)
+            return res;
 
-	@Override
-	public boolean hasRegionsInRange(Rectangle range)
-	{
-		return regionMap.hasInRange(range);
-	}
+        if (amount > 0) {
+            regionMap.onRegionExpand(region, region.getShape().compress(dir.getOpposite(), region.getShape().getLen(dir)).expand(dir, amount));
+            region.doExpand(dir, amount);
+        } else {
+            regionMap.remove(region);
+            region.doExpand(dir, amount);
+            regionMap.add(region);
+        }
 
-	public IntObjMap<Region> unsafeGetRegions()
-	{
-		return idToRegion;
-	}
+        tracker.sendToListeners(region, new PacketRegionExpand(region, dir, amount));
 
-	public RegionChangeResult expandRegion(Region region, ForgeDirection dir, int amount)
-	{
-		RegionChangeResult res = region.canExpand(dir, amount);
-		if(res != RegionChangeResult.ALLOW)
-			return res;
+        return RegionChangeResult.ALLOW;
+    }
 
-		if(amount > 0)
-		{
-			regionMap.onRegionExpand(region, region.getShape().compress(dir.getOpposite(), region.getShape().getLen(dir)).expand(dir, amount));
-			region.doExpand(dir, amount);
-		}
-		else
-		{
-			regionMap.remove(region);
-			region.doExpand(dir, amount);
-			regionMap.add(region);
-		}
+    public void sendToListeners(Region region, UMPacket packet) {
+        tracker.sendToListeners(region, packet);
+    }
 
-		tracker.sendToListeners(region, new PacketRegionExpand(region, dir, amount));
-
-		return RegionChangeResult.ALLOW;
-	}
-
-	public void sendToListeners(Region region, UMPacket packet)
-	{
-		tracker.sendToListeners(region, packet);
-	}
-
-	RegionTracker getTracker()
-	{
-		return tracker;
-	}
+    RegionTracker getTracker() {
+        return tracker;
+    }
 }

@@ -13,47 +13,43 @@ import org.ultramine.network.UMPacket;
 
 import java.io.IOException;
 
-public class PacketIntWindowProperty extends UMPacket
-{
-	private int windowID;
-	private int id;
-	private int val;
+public class PacketIntWindowProperty extends UMPacket {
+    private int windowID;
+    private int id;
+    private int val;
 
-	public PacketIntWindowProperty(){}
-	public PacketIntWindowProperty(Container cont, int id, int val)
-	{
-		this.windowID = cont.windowId;
-		this.id = id;
-		this.val = val;
-	}
+    public PacketIntWindowProperty() {
+    }
 
-	@Override
-	public void write(PacketBuffer buf) throws IOException
-	{
-		buf.writeByte(windowID);
-		buf.writeByte(id);
-		buf.writeInt(val);
-	}
+    public PacketIntWindowProperty(Container cont, int id, int val) {
+        this.windowID = cont.windowId;
+        this.id = id;
+        this.val = val;
+    }
 
-	@Override
-	public void read(PacketBuffer buf) throws IOException
-	{
-		windowID = buf.readUnsignedByte();
-		id = buf.readUnsignedByte();
-		val = buf.readInt();
-	}
+    @Override
+    public void write(PacketBuffer buf) throws IOException {
+        buf.writeByte(windowID);
+        buf.writeByte(id);
+        buf.writeInt(val);
+    }
 
-	@SideOnly(Side.CLIENT)
-	public void processClient(NetHandlerPlayClient net)
-	{
-		EntityClientPlayerMP entityclientplayermp = Minecraft.getMinecraft().thePlayer;
-		if(entityclientplayermp.openContainer != null && entityclientplayermp.openContainer.windowId == windowID)
-			entityclientplayermp.openContainer.updateProgressBar(id, val);
-	}
+    @Override
+    public void read(PacketBuffer buf) throws IOException {
+        windowID = buf.readUnsignedByte();
+        id = buf.readUnsignedByte();
+        val = buf.readInt();
+    }
 
-	public void sendTo(ICrafting player)
-	{
-		if(player instanceof EntityPlayerMP)
-			sendTo((EntityPlayerMP)player);
-	}
+    @SideOnly(Side.CLIENT)
+    public void processClient(NetHandlerPlayClient net) {
+        EntityClientPlayerMP entityclientplayermp = Minecraft.getMinecraft().thePlayer;
+        if (entityclientplayermp.openContainer != null && entityclientplayermp.openContainer.windowId == windowID)
+            entityclientplayermp.openContainer.updateProgressBar(id, val);
+    }
+
+    public void sendTo(ICrafting player) {
+        if (player instanceof EntityPlayerMP)
+            sendTo((EntityPlayerMP) player);
+    }
 }

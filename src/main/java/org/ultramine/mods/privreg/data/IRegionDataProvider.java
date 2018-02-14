@@ -8,19 +8,18 @@ import org.ultramine.mods.privreg.regions.RegionManager;
 import java.util.List;
 
 @SideOnly(Side.SERVER)
-public interface IRegionDataProvider
-{
-	void init(RegionManager regMrg);
+public interface IRegionDataProvider {
+    void init(RegionManager regMrg);
 
-	void createRegion(Region region);
+    void createRegion(Region region);
 
-	void saveAll(Iterable<Region> regions);
+    void saveAll(Iterable<Region> regions);
 
-	void saveRegion(Region region);
+    void saveRegion(Region region);
 
-	void loadAll(List<Region> regions);
+    void loadAll(List<Region> regions);
 
-	boolean destroyRegion(Region region);
+    boolean destroyRegion(Region region);
 
-	void close();
+    void close();
 }
