@@ -7,6 +7,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.MinecraftForge;
 import org.ultramine.mods.privreg.integration.DynmapIntegration;
+import org.ultramine.mods.privreg.integration.GT5EventHandler;
 import org.ultramine.mods.privreg.integration.IC2EventHandler;
 import org.ultramine.mods.privreg.integration.OpenComputersEventHandler;
 import org.ultramine.mods.privreg.packets.PacketUserFlags;
@@ -20,6 +21,12 @@ public class InitServer extends InitCommon {
         try {
             Class.forName("ic2.core.IC2");
             MinecraftForge.EVENT_BUS.register(new IC2EventHandler());
+        } catch (Throwable t) {
+        }
+
+        try {
+            Class.forName("gregtech.GT_Mod");
+            MinecraftForge.EVENT_BUS.register(new GT5EventHandler());
         } catch (Throwable t) {
         }
 
