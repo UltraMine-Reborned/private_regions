@@ -6,10 +6,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.MinecraftForge;
-import org.ultramine.mods.privreg.integration.DynmapIntegration;
-import org.ultramine.mods.privreg.integration.GT5EventHandler;
-import org.ultramine.mods.privreg.integration.IC2EventHandler;
-import org.ultramine.mods.privreg.integration.OpenComputersEventHandler;
+import org.ultramine.mods.privreg.integration.*;
 import org.ultramine.mods.privreg.packets.PacketUserFlags;
 
 @SideOnly(Side.SERVER)
@@ -39,6 +36,12 @@ public class InitServer extends InitCommon {
         try {
             Class.forName("org.dynmap.DynmapCommonAPIListener");
             DynmapIntegration.init();
+        } catch (Throwable t) {
+        }
+
+        try {
+            Class.forName("cr0s.warpdrive.WarpDrive");
+            MinecraftForge.EVENT_BUS.register(new WarpDriveEventHandler());
         } catch (Throwable t) {
         }
     }
