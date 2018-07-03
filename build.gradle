@@ -60,7 +60,7 @@ dependencies {
     compileCommon 'org.dynmap:DynmapCoreAPI:2.0'
 	compileCommon 'li.cil.oc:OpenComputers:MC1.7.10-1.5.+:api'
 
-	compileCommon name: 'WarpDrive-1.7.10-1.4.1.deobf'
+	compileCommon name: 'WarpDrive-1.7.10-1.4.2.deobf'
 
     testCompile 'org.codehaus.groovy:groovy-all:2.4.3'
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
