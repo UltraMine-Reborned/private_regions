@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ultramine.gui.IGui;
 import org.ultramine.mods.privreg.PrivateRegions;
+import org.ultramine.mods.privreg.RegionConfig;
 import org.ultramine.mods.privreg.gui.GuiBlockRegion;
 import org.ultramine.mods.privreg.gui.GuiRegionModules;
 import org.ultramine.mods.privreg.gui.inv.ContainerBlockRegion;
@@ -193,6 +194,9 @@ public class TileBlockRegion extends TileEntity implements ITEPacketHandler<Pack
 
     @SideOnly(Side.CLIENT)
     public AxisAlignedBB getRenderBoundingBox() {
-        return AxisAlignedBB.getBoundingBox(xCoord - 2, yCoord, zCoord - 2, xCoord + 2, yCoord, zCoord + 2);
+        if (RegionConfig.enableDragonModel) {
+            return AxisAlignedBB.getBoundingBox(xCoord - 2, yCoord, zCoord - 2, xCoord + 2, yCoord, zCoord + 2);
+        }
+        return super.getRenderBoundingBox();
     }
 }

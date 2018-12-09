@@ -2,15 +2,14 @@ package org.ultramine.mods.privreg;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.event.FMLServerStoppedEvent;
+import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import org.ultramine.mods.privreg.regions.Region;
 import org.ultramine.mods.privreg.regions.RegionManager;
 import org.ultramine.mods.privreg.regions.RegionManagerGlobal;
+
+import java.io.File;
 
 @Mod(modid = "PrivateRegions", name = "UltraMine Private Regions", version = "@version@", acceptableRemoteVersions = "*")
 public class PrivateRegions {
@@ -51,6 +50,11 @@ public class PrivateRegions {
     @SideOnly(Side.SERVER)
     public ChunkLoaderManager getChunkLoaderManager() {
         return chunkMrg;
+    }
+
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        RegionConfig.loadConfig(new File(event.getModConfigurationDirectory(), "UltraMine/PrivateRegions.cfg"), event.getSide() == Side.CLIENT);
     }
 
     @Mod.EventHandler

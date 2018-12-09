@@ -21,9 +21,12 @@ public class InitClient extends InitCommon {
 
     @Override
     void initSided() {
-        RenderingRegistry.registerBlockHandler(new BlockRegionRender(region.getRenderType()));
+        if (RegionConfig.enableDragonModel) {
+            RenderingRegistry.registerBlockHandler(new BlockRegionRender(region.getRenderType()));
+            ClientRegistry.bindTileEntitySpecialRenderer(TileBlockRegion.class, new TileBlockRegionRenderer());
+        }
+
         RenderingRegistry.registerBlockHandler(new BlockBorderRender(barrier.getRenderType()));
-        ClientRegistry.bindTileEntitySpecialRenderer(TileBlockRegion.class, new TileBlockRegionRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileRentStand.class, new TileRentStandRender());
 
         EventHandlerClient ehc = new EventHandlerClient();
