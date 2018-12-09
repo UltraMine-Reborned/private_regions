@@ -5,8 +5,10 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cr0s.warpdrive.api.EventWarpDrive;
+import cr0s.warpdrive.block.movement.TileEntityShipCore;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import org.ultramine.mods.privreg.PrivateRegions;
 import org.ultramine.mods.privreg.modules.RegionModuleBasic;
@@ -15,7 +17,6 @@ import org.ultramine.regions.BlockPos;
 import org.ultramine.regions.IRegion;
 import org.ultramine.regions.Rectangle;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 import static org.ultramine.mods.privreg.modules.RegionModuleBasic.RIGHT_BASIC;
@@ -24,29 +25,49 @@ import static org.ultramine.mods.privreg.modules.RegionModuleBasic.RIGHT_BASIC;
 public class WarpDriveEventHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onPreJump(EventWarpDrive.Ship.PreJump preJump) {
+        TileEntity tileEntity = preJump.worldCurrent.getTileEntity(preJump.xCurrent, preJump.yCurrent, preJump.zCurrent);
+        if (tileEntity != null) {
+            TileEntityShipCore teShipCore = (TileEntityShipCore) tileEntity;
+            Rectangle rectangle = new Rectangle(new BlockPos(teShipCore.minX, teShipCore.minY, teShipCore.minZ), new BlockPos(teShipCore.maxX, teShipCore.maxY, teShipCore.maxZ));
+            Set<IRegion> regions = PrivateRegions.instance().getServerRegionManager(preJump.worldCurrent.provider.dimensionId).getRegionsInRange(rectangle);
+
+            if (!checkRegionRights(regions, (Object[]) preJump.shipController.getAttachedPlayers()[1])) {
+                preJump.appendReason("One of the players on the ship don't have permission to departure region");
+                preJump.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void onTargetCheckEvent(EventWarpDrive.Ship.TargetCheck targetCheck) {
         AxisAlignedBB targetAaBb = targetCheck.aabbTarget;
         Rectangle targetRect = new Rectangle(new BlockPos(targetAaBb.minX, targetAaBb.minY, targetAaBb.minZ), new BlockPos(targetAaBb.maxX, targetAaBb.maxY, targetAaBb.maxZ));
         Set<IRegion> regions = PrivateRegions.instance().getServerRegionManager(targetCheck.worldTarget.provider.dimensionId).getRegionsInRange(targetRect);
 
+        if (!checkRegionRights(regions, (Object[]) targetCheck.shipController.getAttachedPlayers()[1])) {
+            targetCheck.appendReason("One of the players on the ship don't have permission to destination region");
+            targetCheck.setCanceled(true);
+        }
+    }
+
+    private boolean checkRegionRights(Set<IRegion> regions, Object[] players) {
         if (!regions.isEmpty()) {
             for (IRegion iRegion : regions) {
                 Region region = (Region) iRegion;
                 if (region.isActive() && region.hasModule(RegionModuleBasic.class)) {
-                    ArrayList<String> players = (ArrayList<String>) targetCheck.shipController.getAttachedPlayers()[1];
-                    if(!players.isEmpty()) {
-                        for(String playerName : players) {
+                    if (players != null) {
+                        for (Object object : players) {
+                            String playerName = String.valueOf(object);
                             EntityPlayer entityPlayer = MinecraftServer.getServer().getConfigurationManager().getPlayerByUsername(playerName);
-                            if(entityPlayer != null) {
-                                if (!region.hasRight(entityPlayer.getGameProfile(), RIGHT_BASIC)) {
-                                    targetCheck.appendReason("One of the players on the ship don't have permission to private region");
-                                    targetCheck.setCanceled(true);
-                                }
+                            if (entityPlayer != null && !region.hasRight(entityPlayer.getGameProfile(), RIGHT_BASIC)) {
+                                return false;
                             }
                         }
                     }
                 }
             }
         }
+        return true;
     }
 }

@@ -5,7 +5,6 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
@@ -29,7 +28,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-@ParallelizableTask
 public class SpeicialClassTransformTask extends DefaultTask
 {
 	private File inputDir;
