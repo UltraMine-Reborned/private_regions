@@ -6,9 +6,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
-import org.ultramine.economy.Accounts;
-import org.ultramine.economy.CurrencyRegistry;
-import org.ultramine.economy.IHoldings;
+import org.ultramine.core.economy.account.Account;
+import org.ultramine.core.economy.holdings.Holdings;
+import org.ultramine.core.economy.service.DefaultCurrencyService;
+import org.ultramine.core.economy.service.Economy;
+import org.ultramine.core.service.InjectService;
 import org.ultramine.gui.IGui;
 import org.ultramine.mods.privreg.PrivateRegions;
 import org.ultramine.mods.privreg.RegionConfig;
@@ -25,6 +27,11 @@ import java.util.UUID;
 
 public class TileCharger extends TileEntity implements ITEPacketHandler<PacketChargerAction>, IHasGui {
     private final Map<UUID, InventoryCharger> invs = new HashMap<UUID, InventoryCharger>();
+
+    @InjectService
+    private static Economy economy;
+    @InjectService
+    private static DefaultCurrencyService defaultCurrency;
 
     public boolean isUseableByPlayer(EntityPlayer player) {
         return worldObj.getTileEntity(xCoord, yCoord, zCoord) == this &&
@@ -58,12 +65,16 @@ public class TileCharger extends TileEntity implements ITEPacketHandler<PacketCh
     }
 
     private void buyAntimatter(EntityPlayer player, InventoryCharger inv, int count) {
-        IHoldings holds = Accounts.getPlayer(player.getGameProfile()).getHoldingsOf(CurrencyRegistry.GSC);
+
+        Account account = economy.getPlayerAccount(player.getGameProfile());
+        Holdings holdings = account.getHoldings(defaultCurrency.getDefaultCurrency());
+
         double cost = count * RegionConfig.moneyPerEA;
-        if (cost > 0 && holds.hasEnough(cost)) {
-            holds.subtractChecked(cost);
-            if (inv.charge + count > inv.maxCharge)
+        if (cost > 0 && holdings.hasEnough(cost)) {
+            holdings.withdraw(cost);
+            if (inv.charge + count > inv.maxCharge) {
                 inv.maxCharge = inv.charge + count;
+            }
 
             inv.charge += count;
         }

@@ -6,9 +6,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import org.ultramine.economy.Accounts;
-import org.ultramine.economy.CurrencyRegistry;
-import org.ultramine.economy.IHoldings;
+import org.ultramine.core.economy.account.Account;
+import org.ultramine.core.economy.holdings.Holdings;
+import org.ultramine.core.economy.service.DefaultCurrencyService;
+import org.ultramine.core.economy.service.Economy;
+import org.ultramine.core.service.InjectService;
 import org.ultramine.mods.privreg.Action;
 import org.ultramine.mods.privreg.gui.GuiRegionModules;
 import org.ultramine.mods.privreg.gui.modules.GuiModuleSettings;
@@ -28,6 +30,11 @@ import java.util.UUID;
 
 public class RegionModuleRent extends RegionModule {
     public static final UUID TENANT_OWNER_UUID = new UUID(0, 1);
+
+    @InjectService
+    private static Economy economy;
+    @InjectService
+    private static DefaultCurrencyService defaultCurrency;
 
     private BasicOwner tenantsRights = new BasicOwner(new GameProfile(TENANT_OWNER_UUID, "tenant"));
     private RentMode mode = RentMode.RENT;
@@ -192,9 +199,13 @@ public class RegionModuleRent extends RegionModule {
             new PacketGuiMessage(2).sendTo(player);
             return;
         }
-        IHoldings holds = Accounts.getPlayer(player.getGameProfile()).getHoldingsOf(CurrencyRegistry.GSC);
+
         double amount = mode == RentMode.RENT ? rentalFee * hours / 24d : sellPrice;
-        if (!holds.hasEnough(amount)) {
+
+        Account account = economy.getPlayerAccount(player);
+        Holdings holdings = account.getHoldings(defaultCurrency.getDefaultCurrency());
+
+        if (!holdings.hasEnough(amount)) {
             new PacketGuiMessage(0).sendTo(player);
             return;
         }
@@ -218,7 +229,7 @@ public class RegionModuleRent extends RegionModule {
                 tenants.put(tnt.getProfile().getId(), tnt);
                 addAsOwner(tnt);
             }
-            holds.subtract(amount);
+            holdings.withdraw(amount);
         } else {
             for (Iterator<BasicOwner> it = region.getOwnerStorage().getRawOwners().values().iterator(); it.hasNext(); ) {
                 BasicOwner owner = it.next();
@@ -231,7 +242,7 @@ public class RegionModuleRent extends RegionModule {
             owner.setRight(RegionRights.CREATOR, true);
             region.getOwnerStorage().add(owner);
             region.sendToListeners(new PacketRegionOwner(region, owner, Action.ADD));
-            holds.subtract(amount);
+            holdings.withdraw(amount);
         }
 
         NBTTagCompound nbt = new NBTTagCompound();

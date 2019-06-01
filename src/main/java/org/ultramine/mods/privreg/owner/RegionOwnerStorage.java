@@ -8,11 +8,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.MinecraftServer;
+import org.ultramine.core.permissions.Permissions;
+import org.ultramine.core.service.InjectService;
 import org.ultramine.mods.privreg.ClientUtils;
 import org.ultramine.mods.privreg.PrivateRegions;
 import org.ultramine.mods.privreg.regions.Region;
 import org.ultramine.mods.privreg.regions.RegionRights;
-import org.ultramine.server.PermissionHandler;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,6 +45,9 @@ public class RegionOwnerStorage {
         return owners;
     }
 
+    @InjectService
+    private static Permissions permissions;
+
     public boolean add(BasicOwner owner) {
         if (isOwner(owner.getProfile()))
             return false;
@@ -70,7 +75,7 @@ public class RegionOwnerStorage {
     }
 
     public boolean hasRight(GameProfile profile, OwnerRight right) {
-        if (IS_SERVER && PermissionHandler.getInstance().hasGlobally(profile.getName(), PrivateRegions.ADMIN_PERMISSION))
+        if (IS_SERVER && permissions.has(MinecraftServer.getServer().worldServerForDimension(region.getWorld()), profile, PrivateRegions.ADMIN_PERMISSION))
             return true;
         if (region.hasParent() && region.getParent() instanceof Region)
             if (((Region) region.getParent()).hasRight(profile, right))
