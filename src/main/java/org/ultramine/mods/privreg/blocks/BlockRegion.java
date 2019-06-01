@@ -22,8 +22,9 @@ import org.ultramine.mods.privreg.RegionConfig;
 import org.ultramine.mods.privreg.tiles.TileBlockRegion;
 
 public class BlockRegion extends BlockContainer {
+
     @SideOnly(Side.CLIENT)
-    private IIcon[] icons = new IIcon[3];
+    private IIcon[] icons;
 
     private static int rednerID = RenderingRegistry.getNextAvailableRenderId();
 
@@ -39,6 +40,7 @@ public class BlockRegion extends BlockContainer {
     @Override
     @SideOnly(Side.CLIENT)
     public void registerBlockIcons(IIconRegister r) {
+        icons = new IIcon[3];
         icons[0] = r.registerIcon("privreg:machine_hull");
         icons[1] = r.registerIcon("privreg:region_controller_top");
         icons[2] = r.registerIcon("privreg:region_controller_side");
