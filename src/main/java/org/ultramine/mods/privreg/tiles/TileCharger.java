@@ -64,8 +64,8 @@ public class TileCharger extends TileEntity implements ITEPacketHandler<PacketCh
         return new ContainerCharger(player.inventory, getInventory(player));
     }
 
+    @SideOnly(Side.SERVER)
     private void buyAntimatter(EntityPlayer player, InventoryCharger inv, int count) {
-
         Account account = economy.getPlayerAccount(player.getGameProfile());
         Holdings holdings = account.getHoldings(defaultCurrency.getDefaultCurrency());
 
@@ -81,11 +81,13 @@ public class TileCharger extends TileEntity implements ITEPacketHandler<PacketCh
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void handlePacketClient(PacketChargerAction pkt) {
 
     }
 
     @Override
+    @SideOnly(Side.SERVER)
     public void handlePacketServer(PacketChargerAction pkt, EntityPlayerMP player) {
         buyAntimatter(player, getInventory(player), pkt.amount);
     }
